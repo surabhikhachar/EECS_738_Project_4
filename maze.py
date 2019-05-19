@@ -1,14 +1,8 @@
 # maze.py
 import numpy as np
 import math
-
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
-from enum import IntEnum, auto
-import random
-
 
 NORMAL = -.1
 TREASURE = 1
@@ -26,23 +20,6 @@ def transitionToNextState(s,move,width):
     return s - 1
   else:
     raise Exception
-
-def my_print(Q):
-  cmap = mpl.colors.ListedColormap(['grey', 'gold', 'black', 'red'])
-  # fig, ax = plt.subplots()
-  plt.imshow(Q, aspect='equal', cmap=cmap)
-  # ax.set_aspect('equal') #set the x and y axes to the same scale
-  # plt.xticks([]) # remove the tick marks by setting to an empty list
-  # plt.yticks([]) # remove the tick marks by setting to an empty list
-  # plt.axes().invert_yaxis() #invert the y-axis so the first row of data is at the top
-  plt.colorbar()
-  # white_patch = mpl.patches.Patch(color='grey', label='Normal Ground')
-  # gold_patch = mpl.patches.Patch(color='gold', label='Treasure')
-  # black_patch = mpl.patches.Patch(color='black', label='Obsticle')
-  # red_patch = mpl.patches.Patch(color='red', label='Opponent')
-  # plt.subplots_adjust(right=0.7)
-  # plt.legend(handles=[white_patch, gold_patch, black_patch, red_patch] ,loc='upper left', bbox_to_anchor=(1.04,1), borderaxespad=0)
-  plt.show()
 
 def get_poss_moves(s, M):
   poss_moves = []
@@ -77,8 +54,7 @@ def get_rnd_next_move(s, M, Q):
   poss_next_moves = get_poss_moves(s, M)
   if len(poss_next_moves) == 0:
       return None
-  i = random.randint(1, 100)
-  if i <= 80:
+  if np.random.rand() <= .8:
     return get_best_next_move(s, M, Q)
   else:
     next_move = \
@@ -126,7 +102,20 @@ def train(M, Q, gamma, lrn_rate, goal, ns, max_epochs, startingState, max_steps)
 def walk(start, goal, Q, M, max_steps):
   # cmap = mpl.colors.ListedColormap(['grey', 'gold', 'black', 'red'])
   M_copy = np.copy(M)
-  plt.pcolormesh(M)#, cmap=cmap)
+
+  cmap = mpl.colors.ListedColormap(['grey', 'gold', 'black', 'red'])
+
+  M[abs(M - NORMAL) < .01] = -10
+  M[abs(M - TREASURE) < .01] = -9
+  M[abs(M - OBSTICLE) < .01] = -8
+  M[abs(M - OPPONENT) < .01] = -7
+
+  M[M is -10] = 0
+  M[M is -9] = 1
+  M[M is -8] = 2
+  M[M is -7] = 3
+
+  plt.pcolormesh(M, cmap=cmap)
 
   white_patch = mpl.patches.Patch(color='grey', label='Normal Ground')
   gold_patch = mpl.patches.Patch(color='gold', label='Treasure')
@@ -182,7 +171,7 @@ def main():
   M = M.reshape(shape)
 
   M[1][0] = TREASURE; M[2][1] = TREASURE; M[3][2] = TREASURE; M[4][3] = TREASURE
-  # M[0,4] = OBSTICLE; M[1,3] = OBSTICLE; M[2,2] = OBSTICLE; M[3,1] = OBSTICLE
+
   M[5,1] = OBSTICLE; M[6,1] = OBSTICLE; M[7,1] = OBSTICLE; M[8,1] = OBSTICLE
   M[11,1] = OBSTICLE; M[12,1] = OBSTICLE; M[13,1] = OBSTICLE; M[14,1] = OBSTICLE
   M[11,2] = OBSTICLE; M[11,3] = OBSTICLE; M[11,4] = OBSTICLE; M[11,5] = OBSTICLE
@@ -190,18 +179,8 @@ def main():
   M[10,4] = OPPONENT; M[4,3] = OPPONENT; M[5,10] = OPPONENT; M[14,4] = OPPONENT
 
   M[0,0] = NORMAL
-  # print(stateToXY(0,len(M)))
-  # print("Normal", M[stateToXY(0,len(M))])
-  # print("Obsticle", M[stateToXY(18,len(M))])
-  # print("Obsticle", M[stateToXY(4,len(M))])
-  # print("Obsticle", M[stateToXY(37,len(M))])
-  # R[3,2] = -0.1; R[3,4] = -0.1; R[3,8] = -0.1; R[4,3] = -0.1
-  # R[4,9] = -0.1; R[5,0] = -0.1; R[5,6] = -0.1; R[5,10] = -0.1
-  # R[6,5] = -0.1; R[7,8] = -0.1; R[7,12] = -0.1; R[8,3] = -0.1
-  # R[8,7] = -0.1; R[9,4] = -0.1; R[9,14] = 10.0; R[10,5] = -0.1
-  # R[10,11] = -0.1; R[11,10] = -0.1; R[11,12] = -0.1
-  # R[12,7] = -0.1; R[12,11] = -0.1; R[12,13] = -0.1
-  # R[13,12] = -0.1; R[14,14] = -0.1
+  M[14,14] = TREASURE
+
 
   
 
@@ -209,31 +188,18 @@ def main():
   
   print("Analyzing maze with RL Q-learning")
   start = 0
-  max_steps = 1000
+  max_steps = 10000
 
   ns = M.size # number of states
   goal = ns-1
   Q = np.zeros(shape=[ns,4], dtype=np.float32)  # Quality
-  # for i in range(ns):
-    # for j in range(4):
-    #   state_n = transitionToNextState(i,j,len(M))
-    #   if state_n < 0 or state_n >= ns:
-    #     Q[i][j] = -10
     
   gamma = .5
   lrn_rate = .1
   max_epochs = 1000
-  # my_print(M)
-  train(M, Q, gamma, lrn_rate, goal, ns, max_epochs, 0, max_steps)
-  print("Done ")
   
-  print("The Q matrix is: \n ")
-  # my_print(M)
-  my_print(Q)
+  train(M, Q, gamma, lrn_rate, goal, ns, max_epochs, 0, max_steps)
 
-  print("Using Q to go from 0 to goal (14)")
-  # walk(start, max_steps, Q, M)
-  print(Q[0])
 
   print("Step", np.argmax(Q[0]) )
   walk(start, goal, Q, M, max_steps)
