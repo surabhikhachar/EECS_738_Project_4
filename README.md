@@ -22,7 +22,7 @@ The code for this is written in a Python Jupyter notebook. The output of the cod
 
 ### Reinforcement Learning
 
-This project does not have any particular training data. The maze solver is a basic reinforcement learning problem to solve by creating a maze and using the algorithm designed to find a traversal matrix that avoids obstacles and opponents. The program trains by continuously starting at a random state in the designed maze. From each random state, the program tries to identify all the next states. From all next states, it also identifies all possible next states. The algorithm will continue this until it has reached the state that is the goal state.
+This project does not have any particular training data. The optimal path traversal is a basic reinforcement learning problem to solve by creating a path and using the principles of Q Learning to update the Q matrix to maximize rewards. The algorith employs exploratoion and exploitation to try to find an optimal path. Once the training is complete, a "best path" can be found by taking optimal moves at each state from the values in the Q matrix.
 
 ## References
 
